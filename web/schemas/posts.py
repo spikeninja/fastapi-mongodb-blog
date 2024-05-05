@@ -1,6 +1,7 @@
 from typing import List
 from datetime import datetime
 
+from odmantic import ObjectId
 from pydantic import BaseModel
 from schemas.user import UserPublic
 
@@ -18,6 +19,7 @@ class PostUpdateRequest(BaseModel):
 
 
 class PostPublicSchema(BaseModel):
+    id: ObjectId
     text: str
     title: str
     tags: List[str]

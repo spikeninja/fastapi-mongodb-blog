@@ -14,19 +14,6 @@ services:
     env_file:
       - .env
 
-  celery:
-    build:
-      context: .
-      dockerfile: ./docker/Dockerfile
-    container_name: blog_queue_dev
-    command: celery -A tasks.tasks worker -c 1 --prefetch-multiplier 1 --loglevel=info
-    volumes:
-      - ./web/:/usr/src/
-    env_file:
-      - .env
-    depends_on:
-      - redis
-
   mongodb:
     image: mongo:7.0.7
     restart: on-failure

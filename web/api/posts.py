@@ -8,7 +8,6 @@ from schemas.comments import CommentCreateRequest, CommentPublicSchema
 from schemas.posts import PostCreateRequest, PostUpdateRequest, PostPublicSchema
 from api.dependencies import get_current_user, get_posts_repository, PostsRepository, CommentsRepository, get_comments_repository
 
-
 router = APIRouter()
 
 
@@ -33,7 +32,7 @@ class PostsAPI:
             q=q,
             limit=limit,
             offset=offset,
-            filters={"author_id": ObjectId(author_id)} if author_id else None
+            filters={"author": ObjectId(author_id)} if author_id else None
         )
 
         return {"items": posts, "count": count}
@@ -52,7 +51,7 @@ class PostsAPI:
         return post_db
 
     @router.post("/", response_model=PostPublicSchema)
-    async def create(self, request: PostCreateRequest):
+    async def create_post(self, request: PostCreateRequest):
         """"""
 
         return await self.posts_repo.create(
@@ -90,7 +89,7 @@ class PostsAPI:
         return post_db
 
     @router.post("/{_id}/comments", response_model=CommentPublicSchema)
-    async def create(self, _id: str, request: CommentCreateRequest):
+    async def create_comment(self, _id: str, request: CommentCreateRequest):
         """"""
 
         return await self.comments_repo.create(

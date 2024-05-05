@@ -5,12 +5,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from db.database import DatabaseProvider
+from db.models import PostModel, CommentModel
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """"""
     database = DatabaseProvider()
+    await database.configure_database([PostModel, CommentModel])
     yield
     database.client.close()
 

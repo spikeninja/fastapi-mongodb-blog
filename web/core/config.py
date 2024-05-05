@@ -15,10 +15,6 @@ class Settings(BaseSettings):
     smtp_password: str = os.getenv('SMTP_PASSWORD')
     smtp_port: str = os.getenv("SMTP_PORT", default=465)
 
-    # GOOGLE SSO
-    google_client_id: str = os.getenv("GOOGLE_CLIENT_ID")
-    google_secret: str = os.getenv("GOOGLE_SECRET")
-
     # MONGODB
     mongodb_database: str = os.getenv("MONGO_INITDB_DATABASE")
     mongodb_user: str = os.getenv("MONGO_INITDB_ROOT_USERNAME")
@@ -42,13 +38,6 @@ class Settings(BaseSettings):
     two_fa_enabled: bool = os.getenv("TWO_FA_ENABLED") in {'t', 'true', '1'}
     two_fa_repeat_days: int = os.getenv("TWO_FA_REPEAT_DAYS")
     two_fa_code_lifetime: int = os.getenv("TWO_FA_CODE_LIFETIME")
-
-    # MINIO
-    bucket_name: str = os.getenv("BUCKET_NAME")
-    minio_host: str = os.getenv("MINIO_HOST")
-    minio_port: str = os.getenv("MINIO_PORT")
-    minio_access_key: str = os.getenv("MINIO_ACCESS_KEY")
-    minio_secret_key: str = os.getenv("MINIO_SECRET_KEY")
 
     # FILES PROPERTIES
     max_file_size: int = 10 * 1024 * 1024

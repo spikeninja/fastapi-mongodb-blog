@@ -1,7 +1,8 @@
 from typing import List, Tuple
 from datetime import datetime
 
-from odmantic import ObjectId, query
+from odmantic import ObjectId
+from odmantic.query import QueryExpression, desc
 
 from repository.base import BaseRepository
 from db.models import CommentModel, UserModel
@@ -14,22 +15,22 @@ class CommentsRepository(BaseRepository):
     ) -> Tuple[List[CommentModel], int]:
         """"""
 
-        queries = []
+        query = QueryExpression()
         if filters:
-            queries = [getattr(CommentModel, k) == v for k, v in filters.items()]
+            for key, value in filters.items():
+                query &= (getattr(CommentModel, key) == value)
 
         if q:
-            # queries.append(CommentModel.find({"$text": {"$search": q}}))
-            pass
+            query &= QueryExpression({"$text": {"$search": q}})
 
         comments = await self.database.find(
             CommentModel,
-            queries,
+            query,
             limit=limit,
-            skip=offset,
-            sort=query.desc(CommentModel.created_at),
+            skip=offset or 0,
+            sort=desc(CommentModel.created_at),
         )
-        count = await self.database.count(CommentModel, queries)
+        count = await self.database.count(CommentModel, query)
 
         return comments, count
 

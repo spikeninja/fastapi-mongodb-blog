@@ -1,3 +1,4 @@
+from odmantic import ObjectId
 from pydantic import BaseModel, EmailStr, constr
 
 
@@ -12,7 +13,6 @@ class UserUpdate(BaseModel):
 
 
 class UserPublic(BaseModel):
+    id: ObjectId
     name: str
-    role: str
     email: str
-    credits: int

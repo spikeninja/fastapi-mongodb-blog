@@ -4,8 +4,8 @@ from odmantic import ObjectId
 from db.models import UserModel
 from ext.fastapi_ext import cbv
 from schemas.mixins import ResponseItems
+from schemas.comments import CommentUpdateRequest, CommentPublicSchema
 from api.dependencies import get_current_user, get_comments_repository, CommentsRepository
-from schemas.comments import CommentCreateRequest, CommentUpdateRequest, CommentPublicSchema
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ class CommentsAPI:
         q: str | None = None,
         limit: int | None = None,
         offset: int | None = None,
-        author_id: str | None = None,
+        post_id: str | None = None,
     ):
         """"""
 
@@ -30,7 +30,7 @@ class CommentsAPI:
             q=q,
             limit=limit,
             offset=offset,
-            filters={"author_id": ObjectId(author_id)} if author_id else None
+            filters={"post_id": ObjectId(post_id)} if post_id else None
         )
 
         return {"items": comments, "count": count}
@@ -58,14 +58,14 @@ class CommentsAPI:
     async def delete(self, _id: str):
         """"""
 
-        post_db = await self.comments_repo.get_by_id(_id=_id)
-        if not post_db:
+        comment_db = await self.comments_repo.get_by_id(_id=_id)
+        if not comment_db:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Post with id={_id} is not found"
             )
 
-        if post_db.author.id != self.current_user.id:
+        if comment_db.author.id != self.current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You have no access to this resourse"
@@ -73,4 +73,4 @@ class CommentsAPI:
 
         await self.comments_repo.delete(_id=_id)
 
-        return post_db
+        return comment_db

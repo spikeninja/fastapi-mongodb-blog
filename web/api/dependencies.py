@@ -1,9 +1,6 @@
 from odmantic import AIOEngine
 from fastapi import HTTPException, Depends, status
 
-from core.config import settings
-from db.files import MinioProvider
-from services.files import FilesService
 from db.database import DatabaseProvider
 from repository.users import UserRepository
 from repository.posts import PostsRepository
@@ -13,13 +10,6 @@ from core.security import decode_access_token, JWTBearer
 
 def get_database() -> AIOEngine:
     return DatabaseProvider()
-
-
-def get_file_service() -> FilesService:
-    return FilesService(
-        minio_client=MinioProvider(),
-        bucket_name=settings.bucket_name,
-    )
 
 
 # REPOSITORIES STUFF

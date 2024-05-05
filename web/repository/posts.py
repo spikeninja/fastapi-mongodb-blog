@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import List, Tuple
 
-from odmantic import ObjectId, query
+from odmantic import ObjectId
+from odmantic.query import QueryExpression, desc
 
 from repository.base import BaseRepository
 from db.models import PostModel, LikeModel, UserModel
@@ -10,27 +11,31 @@ from db.models import PostModel, LikeModel, UserModel
 class PostsRepository(BaseRepository):
 
     async def get_all(
-        self, limit: int | None, offset: int | None, filters: dict | None, q: str | None = None
+        self,
+        limit: int | None,
+        offset: int | None,
+        filters: dict | None,
+        q: str | None = None,
     ) -> Tuple[List[PostModel], int]:
         """"""
 
-        queries = []
+        query = QueryExpression()
         if filters:
-            queries = [getattr(PostModel, k) == v for k, v in filters.items()]
+            for key, value in filters.items():
+                query &= (getattr(PostModel, key) == value)
 
         if q:
-            # queries.append(PostModel.find({"$text": {"$search": q}}))
-            pass
+            query &= QueryExpression({"$text": {"$search": q}})
 
         posts = await self.database.find(
             PostModel,
-            queries,
+            query,
             limit=limit,
-            skip=offset,
-            sort=query.desc(PostModel.created_at),
+            skip=offset or 0,
+            sort=desc(PostModel.created_at),
         )
 
-        count = await self.database.count(PostModel, queries)
+        count = await self.database.count(PostModel, query)
 
         return posts, count
 

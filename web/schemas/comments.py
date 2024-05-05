@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from odmantic import ObjectId
 from pydantic import BaseModel
 
 from schemas.user import UserPublic
@@ -14,6 +15,7 @@ class CommentUpdateRequest(BaseModel):
 
 
 class CommentPublicSchema(BaseModel):
+    id: ObjectId
     text: str
     author: UserPublic
     created_at: datetime

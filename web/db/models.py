@@ -1,6 +1,7 @@
 from typing import List
 from datetime import datetime
 
+import pymongo
 from odmantic import Field, Model, Reference, ObjectId
 
 
@@ -21,13 +22,29 @@ class PostModel(Model):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+    model_config = {
+        'indexes': lambda: [
+            pymongo.IndexModel(
+                [(+PostModel.text, pymongo.TEXT), (+PostModel.title, pymongo.TEXT)]
+            )
+        ]
+    }
+
 
 class CommentModel(Model):
-    text: str
     post_id: ObjectId
+    text: str
     author: UserModel = Reference()
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    model_config = {
+        'indexes': lambda: [
+            pymongo.IndexModel(
+                [(+CommentModel.text, pymongo.TEXT)]
+            )
+        ]
+    }
 
 
 class LikeModel(Model):
