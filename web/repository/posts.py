@@ -2,10 +2,11 @@ from datetime import datetime
 from typing import List, Tuple
 
 from odmantic import ObjectId
-from odmantic.query import QueryExpression, desc
+from odmantic.query import QueryExpression
 
 from repository.base import BaseRepository
 from db.models import PostModel, LikeModel, UserModel
+from repository.utils import apply_filters, apply_sorters
 
 
 class PostsRepository(BaseRepository):
@@ -14,28 +15,33 @@ class PostsRepository(BaseRepository):
         self,
         limit: int | None,
         offset: int | None,
-        filters: dict | None,
+        filters: list[dict] | None,
+        sorters: list[dict] | None,
         q: str | None = None,
     ) -> Tuple[List[PostModel], int]:
         """"""
 
-        query = QueryExpression()
-        if filters:
-            for key, value in filters.items():
-                query &= (getattr(PostModel, key) == value)
+        filters_query = await apply_filters(
+            model=PostModel,
+            filters=filters,
+        )
+        sorters_query = await apply_sorters(
+            model=PostModel,
+            sorters=sorters,
+        )
 
         if q:
-            query &= QueryExpression({"$text": {"$search": q}})
+            filters_query &= QueryExpression({"$text": {"$search": q}})
 
         posts = await self.database.find(
             PostModel,
-            query,
+            filters_query,
             limit=limit,
             skip=offset or 0,
-            sort=desc(PostModel.created_at),
+            sort=sorters_query,
         )
 
-        count = await self.database.count(PostModel, query)
+        count = await self.database.count(PostModel, filters_query)
 
         return posts, count
 
@@ -57,7 +63,10 @@ class PostsRepository(BaseRepository):
     ) -> PostModel:
         """"""
 
-        author = await self.database.find_one(UserModel, UserModel.id == ObjectId(author_id))
+        author = await self.database.find_one(
+            UserModel,
+            UserModel.id == ObjectId(author_id)
+        )
 
         post = PostModel(
             tags=tags,

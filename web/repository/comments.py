@@ -2,35 +2,52 @@ from typing import List, Tuple
 from datetime import datetime
 
 from odmantic import ObjectId
-from odmantic.query import QueryExpression, desc
+from odmantic.query import QueryExpression
 
 from repository.base import BaseRepository
 from db.models import CommentModel, UserModel
+from repository.utils import apply_sorters, apply_filters
 
 
 class CommentsRepository(BaseRepository):
 
     async def get_all(
-        self, limit: int | None, offset: int | None, filters: dict | None, q: str | None = None
+        self,
+        limit: int | None,
+        offset: int | None,
+        filters: list[dict] | None,
+        sorters: list[dict] | None,
+        q: str | None = None
     ) -> Tuple[List[CommentModel], int]:
         """"""
 
-        query = QueryExpression()
-        if filters:
-            for key, value in filters.items():
-                query &= (getattr(CommentModel, key) == value)
+        filters_query = await apply_filters(
+            filters=filters,
+            model=CommentModel,
+        )
+        sorters_query = await apply_sorters(
+            sorters=sorters,
+            model=CommentModel,
+        )
 
         if q:
-            query &= QueryExpression({"$text": {"$search": q}})
+            filters_query &= QueryExpression({
+                "$text": {
+                    "$search": q
+                }
+            })
 
         comments = await self.database.find(
             CommentModel,
-            query,
+            filters_query,
             limit=limit,
             skip=offset or 0,
-            sort=desc(CommentModel.created_at),
+            sort=sorters_query,
         )
-        count = await self.database.count(CommentModel, query)
+        count = await self.database.count(
+            CommentModel,
+            filters_query
+        )
 
         return comments, count
 
