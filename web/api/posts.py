@@ -5,7 +5,7 @@ from ext.fastapi_ext import cbv
 from db.models import UserModel
 from schemas.mixins import ResponseItems
 from schemas.comments import CommentCreateRequest, CommentPublicSchema
-from schemas.posts import PostCreateRequest, PostUpdateRequest, PostPublicSchema
+from schemas.posts import PostCreateRequest, PostUpdateRequest, PostPublicSchema, PostSearchSchema
 from api.dependencies import get_current_user, get_posts_repository, PostsRepository, CommentsRepository, get_comments_repository
 
 router = APIRouter()
@@ -32,7 +32,28 @@ class PostsAPI:
             q=q,
             limit=limit,
             offset=offset,
-            filters={"author": ObjectId(author_id)} if author_id else None
+            filters=[{
+                "field": "author",
+                "operation": "eq",
+                "author": ObjectId(author_id),
+            }] if author_id else None,
+            sorters=[{"field": "created_at", "order": "desc"}]
+        )
+
+        return {"items": posts, "count": count}
+
+    @router.post("/search", response_model=ResponseItems[PostPublicSchema])
+    async def search(self, request: PostSearchSchema):
+        """"""
+
+        raw_request = request.model_dump()
+
+        posts, count = await self.posts_repo.get_all(
+            q=request.q,
+            limit=request.limit,
+            offset=request.offset,
+            sorters=raw_request['sorters'],
+            filters=raw_request['filters'],
         )
 
         return {"items": posts, "count": count}

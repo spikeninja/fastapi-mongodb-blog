@@ -1,3 +1,4 @@
+from enum import Enum
 from datetime import datetime
 from typing import TypeVar, List, Generic
 
@@ -26,5 +27,27 @@ class ResponseItems(BaseModel, Generic[T]):
     items: List[T]
 
 
-class QuizMinutesField(BaseModel):
-    minutes: int = Field(ge=0, le=150, default=0)
+# Filters, Sorters
+class OrderEnum(str, Enum):
+    asc = "asc"
+    desc = "desc"
+
+
+class SorterBase(BaseModel):
+    field: str
+    order: OrderEnum
+
+
+class OperationEnum(str, Enum):
+    eq = "eq"
+    ne = "ne"
+    gt = "gt"
+    ge = "ge"
+    lt = "lt"
+    le = "le"
+    in_ = "in"
+
+
+class FilterBase(BaseModel):
+    operation: OperationEnum
+    val: list | float | int | bool | str | None

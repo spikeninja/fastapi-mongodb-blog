@@ -4,8 +4,8 @@ from odmantic import ObjectId
 from db.models import UserModel
 from ext.fastapi_ext import cbv
 from schemas.mixins import ResponseItems
-from schemas.comments import CommentUpdateRequest, CommentPublicSchema
 from api.dependencies import get_current_user, get_comments_repository, CommentsRepository
+from schemas.comments import CommentUpdateRequest, CommentPublicSchema, CommentSearchSchema
 
 router = APIRouter()
 
@@ -30,7 +30,31 @@ class CommentsAPI:
             q=q,
             limit=limit,
             offset=offset,
-            filters={"post_id": ObjectId(post_id)} if post_id else None
+            filters=[{
+                "field": "post_id",
+                "operation": "eq",
+                "value": ObjectId(post_id),
+            }] if post_id else None,
+            sorters=[{"order": "desc", "field": "created_at"}],
+        )
+
+        return {"items": comments, "count": count}
+
+    @router.post(
+        "/search",
+        response_model=ResponseItems[CommentPublicSchema]
+    )
+    async def search(self, request: CommentSearchSchema):
+        """"""
+
+        raw_request = request.model_dump()
+
+        comments, count = await self.comments_repo.get_all(
+            q=request.q,
+            limit=request.limit,
+            offset=request.offset,
+            sorters=raw_request['sorters'],
+            filters=raw_request['filters'],
         )
 
         return {"items": comments, "count": count}

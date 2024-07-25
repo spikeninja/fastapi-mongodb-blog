@@ -1,9 +1,10 @@
-from typing import List
 from datetime import datetime
+from typing import List, Literal
 
 from odmantic import ObjectId
 from pydantic import BaseModel
 from schemas.user import UserPublic
+from schemas.mixins import FilterBase, SorterBase
 
 
 class PostCreateRequest(BaseModel):
@@ -26,3 +27,19 @@ class PostPublicSchema(BaseModel):
     author: UserPublic
     created_at: datetime
     updated_at: datetime
+
+
+class PostFilter(FilterBase):
+    field: Literal["id"]
+
+
+class PostSorter(SorterBase):
+    field: Literal["id", "created_at"]
+
+
+class PostSearchSchema(BaseModel):
+    limit: int
+    offset: int
+    q: str | None = None
+    filters: list[PostFilter] | None = None
+    sorters: list[PostSorter] | None = None
