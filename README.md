@@ -1,4 +1,4 @@
-# Blog API
+# Blog API project starter
 
 ## Development
 1) Run `cp .env.example dev.env`
