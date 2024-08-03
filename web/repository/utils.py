@@ -34,7 +34,7 @@ async def apply_filters(
             filters_query &= (
                 operation(
                     getattr(model, _filter['field']),
-                    _filter['value'],
+                    _filter['val'],
                 )
             )
 

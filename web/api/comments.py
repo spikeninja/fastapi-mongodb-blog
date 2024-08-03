@@ -33,7 +33,7 @@ class CommentsAPI:
             filters=[{
                 "field": "post_id",
                 "operation": "eq",
-                "value": ObjectId(post_id),
+                "val": ObjectId(post_id),
             }] if post_id else None,
             sorters=[{"order": "desc", "field": "created_at"}],
         )
