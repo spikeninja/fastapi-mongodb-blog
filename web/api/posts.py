@@ -39,7 +39,6 @@ class PostsAPI:
             custom_filters.append({"tags": {"$all": tags}})
 
         posts, count = await self.posts_repo.get_all(
-            q=q,
             limit=limit,
             offset=offset,
             filters=[{
@@ -59,12 +58,16 @@ class PostsAPI:
 
         raw_request = request.model_dump()
 
+        custom_filters = []
+        if request.q:
+            custom_filters.append({"$text": {"$search": request.q}})
+
         posts, count = await self.posts_repo.get_all(
-            q=request.q,
             limit=request.limit,
             offset=request.offset,
             sorters=raw_request['sorters'],
             filters=raw_request['filters'],
+            custom_filters=custom_filters,
         )
 
         return {"items": posts, "count": count}
