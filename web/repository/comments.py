@@ -17,7 +17,8 @@ class CommentsRepository(BaseRepository):
         offset: int | None,
         filters: list[dict] | None,
         sorters: list[dict] | None,
-        q: str | None = None
+        q: str | None = None,
+        custom_filters: list[dict] | None = None,
     ) -> Tuple[List[CommentModel], int]:
         """"""
 
@@ -32,10 +33,12 @@ class CommentsRepository(BaseRepository):
 
         if q:
             filters_query &= QueryExpression({
-                "$text": {
-                    "$search": q
-                }
+                "$text": {"$search": q}
             })
+
+        if custom_filters:
+            for _filter in custom_filters:
+                filters_query &= QueryExpression(_filter)
 
         comments = await self.database.find(
             CommentModel,

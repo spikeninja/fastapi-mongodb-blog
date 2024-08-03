@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 from odmantic import ObjectId
 from ext.fastapi_ext import cbv
@@ -25,8 +26,17 @@ class PostsAPI:
         limit: int | None = None,
         offset: int | None = None,
         author_id: str | None = None,
+        tags: List[str] = Query(None, alias="tags"),
     ):
         """"""
+
+        custom_filters = []
+
+        if q:
+            custom_filters.append({"$text": {"$search": q}})
+
+        if tags:
+            custom_filters.append({"tags": {"$all": tags}})
 
         posts, count = await self.posts_repo.get_all(
             q=q,
@@ -35,9 +45,10 @@ class PostsAPI:
             filters=[{
                 "field": "author",
                 "operation": "eq",
-                "author": ObjectId(author_id),
+                "val": ObjectId(author_id),
             }] if author_id else None,
-            sorters=[{"field": "created_at", "order": "desc"}]
+            custom_filters=custom_filters,
+            sorters=[{"field": "created_at", "order": "desc"}],
         )
 
         return {"items": posts, "count": count}
