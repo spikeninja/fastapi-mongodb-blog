@@ -15,7 +15,6 @@ router = APIRouter()
 @cbv(router)
 class PostsAPI:
 
-    current_user: UserModel = Depends(get_current_user)
     posts_repo: PostsRepository = Depends(get_posts_repository)
     comments_repo: CommentsRepository = Depends(get_comments_repository)
 
@@ -86,24 +85,27 @@ class PostsAPI:
         return post_db
 
     @router.post("/", response_model=PostPublicSchema)
-    async def create_post(self, request: PostCreateRequest):
+    async def create_post(
+        self,
+        request: PostCreateRequest,
+        current_user: UserModel = Depends(get_current_user),
+    ):
         """"""
 
         return await self.posts_repo.create(
             tags=request.tags,
             text=request.text,
             title=request.title,
-            author_id=self.current_user.id,
+            author_id=current_user.id,
         )
 
     @router.patch("/{_id}", response_model=PostPublicSchema)
-    async def update(self, _id: str, request: PostUpdateRequest):
-        """"""
-
-        return await self.posts_repo.update(_id=_id, values=request.model_dump(exclude_unset=True))
-
-    @router.delete("/{_id}", response_model=PostPublicSchema)
-    async def delete(self, _id: str):
+    async def update(
+        self,
+        _id: str,
+        request: PostUpdateRequest,
+        current_user: UserModel = Depends(get_current_user),
+    ):
         """"""
 
         post_db = await self.posts_repo.get_by_id(_id=_id)
@@ -113,10 +115,33 @@ class PostsAPI:
                 detail=f"Post with id={_id} is not found"
             )
 
-        if post_db.author.id != self.current_user.id:
+        if post_db.author.id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You have no access to this resourse"
+                detail="You can edit only your posts"
+            )
+
+        return await self.posts_repo.update(_id=_id, values=request.model_dump(exclude_unset=True))
+
+    @router.delete("/{_id}", response_model=PostPublicSchema)
+    async def delete(
+        self,
+        _id: str,
+        current_user: UserModel = Depends(get_current_user),
+    ):
+        """"""
+
+        post_db = await self.posts_repo.get_by_id(_id=_id)
+        if not post_db:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Post with id={_id} is not found"
+            )
+
+        if post_db.author.id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can delete only your posts"
             )
 
         await self.posts_repo.delete(_id=_id)
@@ -124,11 +149,16 @@ class PostsAPI:
         return post_db
 
     @router.post("/{_id}/comments", response_model=CommentPublicSchema)
-    async def create_comment(self, _id: str, request: CommentCreateRequest):
+    async def create_comment(
+        self,
+        _id: str,
+        request: CommentCreateRequest,
+        current_user: UserModel = Depends(get_current_user),
+    ):
         """"""
 
         return await self.comments_repo.create(
             post_id=_id,
             text=request.text,
-            author_id=self.current_user.id,
+            author_id=current_user.id,
         )
