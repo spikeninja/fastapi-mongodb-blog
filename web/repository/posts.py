@@ -55,6 +55,19 @@ class PostsRepository(BaseRepository):
 
         return await self.database.find_one(PostModel, getattr(PostModel, field) == value)
 
+    async def get_all_tags(self) -> list[dict]:
+        """"""
+
+        collection = self.database.get_collection(PostModel)
+
+        pipeline = [
+            {'$unwind': "$tags"},
+            {'$group': {'_id': None, 'uniqueTags': {'$addToSet': "$tags"}}},
+            {"$project": {"_id": 0, "uniqueTags": 1}},
+        ]
+
+        return await collection.aggregate(pipeline).to_list(length=None)
+
     async def create(
         self,
         text: str,

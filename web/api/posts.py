@@ -51,6 +51,14 @@ class PostsAPI:
 
         return {"items": posts, "count": count}
 
+    @router.get("/tags")
+    async def get_all_tags(self):
+        """"""
+
+        documents = await self.posts_repo.get_all_tags()
+
+        return {"tags": documents[0]['uniqueTags']}
+
     @router.post("/search", response_model=ResponseItems[PostPublicSchema])
     async def search(self, request: PostSearchSchema):
         """"""
