@@ -9,7 +9,12 @@ class UserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    name: str
+    name: str | None = None
+
+
+class PasswordUpdate(BaseModel):
+    old_password: str
+    new_password: str
 
 
 class UserPublic(BaseModel):

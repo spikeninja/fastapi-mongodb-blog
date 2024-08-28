@@ -1,6 +1,6 @@
 from enum import Enum
+from datetime import datetime, timedelta
 
-import arrow
 from redis.asyncio import Redis as AsyncRedis
 
 from core.config import settings
@@ -47,9 +47,10 @@ class TwoFA:
         if not last_time_raw:
             return True
 
-        last_time = arrow.get(last_time_raw)
+        # todo: last_time = arrow.get(last_time_raw)
+        last_time = datetime.utcnow()
 
-        return last_time.shift(minutes=settings.two_fa_code_lifetime) < arrow.utcnow()
+        return last_time + timedelta(minutes=settings.two_fa_code_lifetime) < datetime.utcnow()
 
     async def set_state(self, state: str):
         """"""
@@ -98,7 +99,7 @@ class TwoFA:
                 "code": code,
                 "attempts": 0,
                 "two_fa_state": TwoFAStates.S2.value,
-                "two_fa_start_time": str(arrow.utcnow()),
+                "two_fa_start_time": datetime.utcnow(),
             },
         )
 
@@ -113,6 +114,6 @@ class TwoFA:
         await self.rclient.hset(
             name=self.name,
             mapping={
-                TwoFAField.two_fa_last_used.value: str(arrow.utcnow())
+                TwoFAField.two_fa_last_used.value: datetime.utcnow()
             }
         )
