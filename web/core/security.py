@@ -50,7 +50,13 @@ class JWTBearer(HTTPBearer):
         super(JWTBearer, self).__init__(auto_error=auto_error)
 
     async def __call__(self, request: Request):
-        credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
+        try:
+            credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
+        except HTTPException as e:
+            raise HTTPException(
+                detail=e.detail,
+                status_code=status.HTTP_401_UNAUTHORIZED,
+            )
 
         exp = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
